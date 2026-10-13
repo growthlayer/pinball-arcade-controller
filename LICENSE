@@ -1,0 +1,30 @@
+Pinball Controller -- licensing
+===============================
+
+This repository contains two kinds of work under two licences.
+
+1. Hardware design -- Creative Commons Attribution-ShareAlike 4.0
+   (CC BY-SA 4.0), https://creativecommons.org/licenses/by-sa/4.0/
+
+   Applies to: everything in model/, print/, images/ and docs/.
+
+   If you share or remix it, credit this project and keep the same
+   licence.
+
+2. Software -- MIT License (see LICENSE-CODE)
+
+   Applies to: everything in status-display/, tools/, renders/, pc/ and
+   firmware/pinscape_config.json, except the third-party parts below.
+
+Third-party software
+--------------------
+
+- firmware/zedmd-v5.1.8-pinball.patch, firmware/attract_fx.h and
+  firmware/attract_text.h modify and are compiled into ZeDMD
+  (https://github.com/PPUC/ZeDMD, GPL-2.0, (c) the PPUC team). They are
+  distributed under the GPL-2.0.
+- The marquee service loads libzedmd (https://github.com/PPUC/libzedmd,
+  GPL-3.0) at run time; it is not included here.
+- Pinscape Pico (https://github.com/mjrgh/PinscapePico, (c) Michael J
+  Roberts, BSD-style licence) is downloaded from its own releases; only
+  a configuration file for it is included here.

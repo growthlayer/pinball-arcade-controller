@@ -1,0 +1,41 @@
+# OpenSCAD
+*.csg
+*.stl
+*.off
+*.amf
+*.dxf
+*.echo
+*-backup.scad
+backups/
+
+# Bambu Studio / slicer output
+*.3mf
+*.gcode
+*.gcode.3mf
+*.gcode.gz
+
+# OS cruft
+Thumbs.db
+.DS_Store
+.venv-esp/
+firmware/*.bin
+status-display/.pio/
+status-display/host/config.json
+__pycache__/
+
+# ready-to-print projects and their STLs ARE committed
+!print/bambu-*/*.3mf
+!print/stl/*.stl
+firmware/*.uf2
+firmware/*.zip
+firmware/pinscape/
+tools/zedmd_pattern
+tools/*.raw
+tools/zedmd_play
+tools/zedmd_rgb
+tools/attract_sim
+tools/pinscape/pinscape_cli
+tools/audio/play_to
+tools/audio/*.wav
+tools/audio/sounds/
+renders/build/

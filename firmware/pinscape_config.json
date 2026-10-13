@@ -1,0 +1,65 @@
+// Pinscape Pico configuration - pinball arcade controller (github.com/growthlayer/pinball-arcade-controller)
+// Firmware: PinscapePico v1.0.2 (firmware/PinscapePico-pico-v1.0.2.uf2), flashed 2026-10-02.
+// Load with the Pinscape Pico Config Tool (Windows): open the device -> Main Config -> paste this file -> Save to Pico,
+// or from the Mac: tools/pinscape/pinscape_cli putconfig firmware/pinscape_config.json
+//
+// Hardware: Raspberry Pi Pico H + LIS3DH breakout on the cover plate.
+//   LIS3DH VCC -> Pico 3V3 (pin 36)     GND -> GND (pin 38)
+//   SDA -> GP4 (pin 6)                  SCL -> GP5 (pin 7)
+//   CS  -> VCC (selects I2C)            SDO -> GND (address 0x18)
+// This Pico does nudge only: buttons go through the Zero-Delay encoder, solenoids through the timer relays.
+{
+    id: {
+        unitNum: 1,
+        unitName: "Pinball controller",
+        ledWizUnitNum: 0,            // no feedback outputs on this Pico
+    },
+
+    // I2C bus 0 on GP4 (SDA) / GP5 (SCL). The breakout has its own pull-ups; the Pico's weak internal ones
+    // stay on as well (harmless with a single device on 10 cm of wire).
+    i2c0: {
+        sda: 4,
+        scl: 5,
+        speed: 400000,
+        pullup: true,
+    },
+
+    // Accelerometer. To use the interrupt line later (slightly lower latency): wire INT1 -> GP6 (pin 9)
+    // and add   interrupt: 6,
+    lis3dh: {
+        i2c: 0,
+        addr: 0x18,
+        gRange: 2,                   // best resolution for nudging
+    },
+
+    // Axis mapping. Standard orientation: +X = right, +Y = toward the back, +Z = up.
+    // If a nudge moves the ball the wrong way in the Config Tool's Nudge window, flip the sign ("-x")
+    // or swap the letters here.
+    // Measured on the bench 2026-10-07 (tools/nudge_watch.py, shoves with the cover in its installed orientation):
+    // shove right -> device -Y, shove toward the back -> device +X. The breakout sits turned 90 deg on the cover.
+    nudge: {
+        x: "-y",
+        y: "+x",
+        z: "+z",
+    },
+
+    // What the PC sees: a gamepad with the nudge acceleration on X/Y and the nudge velocity on RX/RY
+    // (Visual Pinball 10.8+ can use either; velocity gives the most realistic nudging).
+    gamepad: {
+        enable: true,
+        x: "nudge.x",
+        y: "nudge.y",
+        rx: "nudge.vx",
+        ry: "nudge.vy",
+        // Visual Pinball 10.8.0 reads nudge from DirectInput axes and sums EVERY game controller, so the arcade
+        // stick's X/Y nudged the table too. The stick encoder has no sliders: VPX reads nudge from these instead
+        // (acceleration input; velocity mode needs a far larger scale in VPX 10.8.0 - retry after the USB isolator).
+        slider1: "nudge.x",
+        slider2: "nudge.y",
+    },
+
+    // Open Pinball Device: the newer pinball-specific interface (VP 10.8+ picks it up automatically).
+    openPinballDevice: {
+        enable: true,
+    },
+}

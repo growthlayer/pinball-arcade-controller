@@ -1,0 +1,119 @@
+diff --git a/platformio.ini b/platformio.ini
+index 38e76dc..b137304 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -116,3 +116,9 @@ build_flags = ${esp32.build_flags}
+     -UARDUINO_USB_CDC_ON_BOOT
+     ;-DARDUINO_USB_CDC_ON_BOOT=1 ;//Leave this for debugging
+     -DDISPLAY_RM67162_AMOLED=1
++
++[env:128x32_rot180]
++extends = env:128x32
++build_flags = ${env:128x32.build_flags}
++    -DZEDMD_ROTATE_180=1
++    -DZEDMD_ATTRACT=1
+diff --git a/src/displays/LEDMatrix.cpp b/src/displays/LEDMatrix.cpp
+index 2849f38..7b12552 100644
+--- a/src/displays/LEDMatrix.cpp
++++ b/src/displays/LEDMatrix.cpp
+@@ -49,13 +49,24 @@ uint8_t LedMatrix::GetCurrentScalingMode() { return 0; }
+ 
+ void LedMatrix::SetCurrentScalingMode(uint8_t mode) {}
+ 
++// ZEDMD_ROTATE_180 (pinball-controller, 2026-10-03): the panels are mounted turned 180 deg so the chain input
++// sits next to the ESP32; every pixel goes through these two functions, so turning the picture here turns
++// everything - games, logo, menus.
++#ifdef ZEDMD_ROTATE_180
++#define ZX(x) (TOTAL_WIDTH - 1 - (x))
++#define ZY(y) (TOTAL_HEIGHT - 1 - (y))
++#else
++#define ZX(x) (x)
++#define ZY(y) (y)
++#endif
++
+ void LedMatrix::DrawPixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g,
+                           uint8_t b) {
+-  dma_display->drawPixelRGB888(x, y + yOffset, r, g, b);
++  dma_display->drawPixelRGB888(ZX(x), ZY(y) + yOffset, r, g, b);
+ }
+ 
+ void LedMatrix::DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
+-  dma_display->drawPixel(x, y + yOffset, color);
++  dma_display->drawPixel(ZX(x), ZY(y) + yOffset, color);
+ }
+ 
+ void LedMatrix::ClearScreen() { dma_display->clearScreen(); }
+diff --git a/src/main.cpp b/src/main.cpp
+index 43bee7e..ccb22ed 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -166,6 +166,32 @@ bool logoActive;
+ bool transportActive;
+ uint8_t transportWaitCounter;
+ uint8_t logoWaitCounter;
++
++// ZEDMD_ATTRACT (pinball-controller, 2026-10-03): when the PC sends nothing, play a built-in attract loop
++// (orange DMD style, 30 fps) instead of going blank. Stops on the first frame from the PC.
++bool attractActive = false;
++#if defined(ZEDMD_ATTRACT) && (TOTAL_WIDTH == 128) && (TOTAL_HEIGHT == 32)
++// Colour attract show rendered live by firmware/attract_fx.h (plasma, fire, pinball table, warp + fireworks,
++// rainbow scroller, matrix rain, chase lights) - the same file the Mac preview tool compiles.
++#include "attract_fx.h"
++static uint8_t attractFrame[TOTAL_WIDTH * TOTAL_HEIGHT * 3];
++void StartAttract() {
++  attractActive = true;
++  FxRestart();
++}
++void AttractStep() {
++  const uint32_t t0 = millis();
++  FxRender(attractFrame);
++  for (uint16_t y = 0; y < TOTAL_HEIGHT; y++)
++    for (uint16_t x = 0; x < TOTAL_WIDTH; x++) {
++      const uint8_t* p = attractFrame + (y * TOTAL_WIDTH + x) * 3;
++      display->DrawPixel(x, y, p[0], p[1], p[2]);
++    }
++  const uint32_t dt = millis() - t0;
++  vTaskDelay(pdMS_TO_TICKS(dt < 32 ? 33 - dt : 1));
++}
++#define HAVE_ATTRACT 1
++#endif
+ uint32_t lastDataReceived;
+ bool serverRunning;
+ uint8_t throbberColors[6] __attribute__((aligned(4))) = {0};
+@@ -611,6 +637,7 @@ void DisplayLogo(void) {
+ 
+   logoActive = true;
+   logoWaitCounter = 0;
++  attractActive = false;
+ }
+ 
+ void DisplayId() {
+@@ -2200,12 +2227,20 @@ void loop() {
+ 
+     if (logoWaitCounter < 201) ++logoWaitCounter;
+ 
++#ifdef HAVE_ATTRACT
++    if (!attractActive && (100 == logoWaitCounter || 200 == logoWaitCounter)) StartAttract();
++    if (attractActive) {
++      AttractStep();
++      return;
++    }
++#else
+     if (100 == logoWaitCounter) {
+       DisplayUpdate();
+     }
+     if (200 == logoWaitCounter) {
+       ScreenSaver();
+     }
++#endif
+ 
+     display->DrawPixel(TOTAL_WIDTH - 3, TOTAL_HEIGHT - 3, throbberColors[0],
+                        throbberColors[1], throbberColors[2]);
+@@ -2283,6 +2318,7 @@ void loop() {
+       ClearScreen();
+       logoActive = false;
+     }
++    attractActive = false;
+ 
+     if (AcquireNextProcessingBuffer()) {
+       if (2 == bufferSizes[processingBuffer] &&

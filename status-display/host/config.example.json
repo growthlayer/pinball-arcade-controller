@@ -1,0 +1,8 @@
+{
+  "port": null,
+  "nudge": {"device": ["pinscape"], "axis_x": 0, "axis_y": 1, "invert_x": false, "invert_y": false, "full_scale": 0.25},
+  "flippers": {"device": ["dragonrise", "generic usb joystick", "usb gamepad"], "left_button": 9, "right_button": 8},
+  "coil": {"pulse_s": 0.1, "overheat_duty": 0.45, "tau_s": 90},
+  "tilt": {"threshold": 95, "window_s": 4.0},
+  "table_from_window": true
+}

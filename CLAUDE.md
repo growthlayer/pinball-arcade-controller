@@ -1,0 +1,54 @@
+# Pinball Controller — build assistant notes for Claude Code
+
+You are helping someone build (or modify) the Pinball Controller: a 3D-printed desktop controller for
+Visual Pinball X and arcade games with solenoid flipper knocks, an exciter, accelerometer nudge, a
+status screen and a slide-on LED marquee. The builder may not be an electronics person. Work step by
+step with them, confirm what they see before moving on, and ask for a photo whenever the hardware state
+is unclear.
+
+## Where things are
+
+| Path | What |
+|---|---|
+| `README.md` | the build guide: parts, Steps 1–6, troubleshooting, design notes. Follow its order. |
+| `images/wiring_*.png` / `.svg` | per-step wiring pictures with a from → to chart on the right |
+| `tools/make_wiring_diagrams.py` | every wire as data (`CONTROLLER_WIRES`, `MARQUEE_WIRES`) — the source of truth for "what goes where" questions |
+| `firmware/` | Pinscape Pico config, ZeDMD patch + attract show; `firmware/README.md` for flashing |
+| `status-display/` | T-Display-S3 firmware, the PC status helper, the exciter sound relay |
+| `tools/synthwave/` | the marquee service (owns the marquee's COM port) and the neon show |
+| `pc/README.md` | Windows / VPX / RetroBat setup |
+| `print/` | ready-to-print 3MFs per printer + STLs; `tools/make_print_files.py` rebuilds them |
+| `model/pinball_controller_v2.scad` | the parametric case (OpenSCAD) |
+| `docs/` | GX16 beep-test sheets, cable routing, board pinouts, assembly / cable-route checkers |
+
+## Things you can do for the builder
+
+- **Flash** (firmware/README.md): Pinscape Pico (`ConfigTool.exe --put-config firmware\pinscape_config.json`
+  then `--reset`), ZeDMD (`pio run -e 128x32_rot180 -t upload` in a patched ZeDMD checkout), the
+  T-Display (`pio run -d status-display -t upload`).
+- **Check the USB devices** (pc/README.md has the PowerShell one-liner and the five USB IDs).
+- **Set up the PC helpers** and their Startup shortcuts (pc/README.md section 1).
+- **Read the logs** in `%LOCALAPPDATA%\pinball-status\` (marquee.log, exciter.log, status.log).
+- **Test input**: `python tools/encoder_watch.py` (buttons), `python tools/nudge_watch.py` (nudge).
+- **Case changes**: edit the .scad, run `python docs/assembly_audit.py` (no CLASH) and
+  `python docs/cable_router.py` (0 errors), then `python tools/make_print_files.py`.
+- **Wiring changes**: edit the wire lists in `tools/make_wiring_diagrams.py` and re-run it.
+
+## Rules
+
+- **12 V must never reach a USB pin.** Before the first power-up, and after any work on a GX16 plug or
+  socket, have the builder beep-test it (docs/gx16_test.png, docs/gx16_box_test.png): pins 1/2 to 5/6/7/8
+  open, 5 to 8 open. Ask for the readings; do not skip this.
+- **The USB isolator stays in.** Without it, coil current shares USB ground and kills hub boards. It must
+  be a 480 Mbps (ADuM3165) type or the sound card won't work.
+- **Never fire a solenoid with nothing in front of its plunger** — the striker holds the plunger in.
+  Relays stay in mode P1.1 (one 0.1 s pulse per press): the coils are rated 2 s on.
+- **The marquee needs its 12 V whenever its USB is connected**, or the ESP32 hangs after a port reset.
+  Opening the ZeDMD COM port reboots the ESP32 — never retry it in a tight loop.
+- Don't turn on the flip / rotate options in `DmdDevice.ini`: the firmware already turns the picture.
+- The LIS3DH is 3.3 V only (Pico pin 36).
+- Every printed-part joint is an M3 heat-set insert + M3 screw; boards use plain machine screws into
+  the printed posts. Don't propose glue, pins or snap fits.
+- If a measurement or photo contradicts the docs, trust the hardware, say so, and stop to work out why.
+- Don't change the builder's Windows security settings or system-wide audio policy yourself; give them
+  the command or the click path and let them do it.
