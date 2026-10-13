@@ -29,6 +29,22 @@ def find_port():
             return p.device
     return None
 
+def hard_reset(port):
+    """Reset the ESP32 through the dev board's auto-reset circuit (CP2102 RTS -> EN, DTR -> IO0): EN low for
+    0.2 s with IO0 high = a normal boot. After a bad reset the ZeDMD can keep running its attract show yet never
+    answer the handshake again; this is the software version of unplugging the marquee."""
+    import serial
+    try:
+        s = serial.Serial()
+        s.port, s.baudrate = port, 115200
+        s.dtr, s.rts = False, False                        # set before open so opening doesn't pulse anything
+        s.open()
+        s.rts = True; time.sleep(0.2); s.rts = False       # EN low, then release
+        s.close()
+        log("reset the ESP32 on", port, "(no handshake twice)")
+    except Exception as e:
+        log("ESP32 reset failed:", e)
+
 def find_retrobat():
     """RETROBAT_DIR if set, else the first X:/RetroBat that exists"""
     env = os.environ.get("RETROBAT_DIR")
@@ -121,6 +137,9 @@ class Marquee:
         if not self.d.ZeDMD_Open(z):
             wait = self.BACKOFF[min(self.fails, len(self.BACKOFF) - 1)]
             self.fails += 1
+            if self.fails >= 2:                            # ZeDMD alive (attract show) but deaf: a clean chip reset
+                hard_reset(port)                           # clears it, like re-plugging the marquee did
+                wait = self.BOOT_GRACE
             log("could not open", port, f"- next try in {int(wait)} s (lets the ESP32 finish booting)")
             self.retry_at = now + wait
             return False
