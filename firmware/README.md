@@ -23,25 +23,36 @@ What the config sets up: the LIS3DH on I²C0 (GP4 SDA / GP5 SCL, address 0x18), 
 the box (the module sits lengthwise: x = −Y, y = +X), and the nudge acceleration on the gamepad's
 **slider 1 / slider 2** (VPX reads those — see [pc/README.md](../pc/README.md)).
 
-## Marquee ESP32 — ZeDMD with the turned picture and the attract show
+## Marquee ESP32 — ZeDMD with the turned picture and the offline show
 
 [ZeDMD](https://github.com/PPUC/ZeDMD) by the PPUC team makes an ESP32 + HUB75 panels into a DMD that
 dmd-extensions and VPX drive directly. The two panels sit upside down in the marquee trays, so this build
-turns the picture in the firmware and adds a colour attract show for when no PC software is talking to it:
+turns the picture in the firmware and adds an **offline show** for whenever no PC software is talking to it:
 
 - [`zedmd-v5.1.8-pinball.patch`](zedmd-v5.1.8-pinball.patch) — adds the PlatformIO env `128x32_rot180`
-  and the attract show hook
-- [`attract_fx.h`](attract_fx.h), [`attract_text.h`](attract_text.h) — the show (plasma, fire, a pinball
-  table, fireworks, matrix rain …, about a minute, loops). Change the words with `tools/attract_text.py`.
+  and the hook that plays the show after 5 s without data from the PC (it stops on the first PC frame)
+- [`attract_offline.h`](attract_offline.h) — the offline show: neon synthwave scenes that say the PC isn't
+  connected (a flickering NO SIGNAL sign, WAITING FOR PC with a radar sweep, an unplugged neon USB lead, a
+  NO INPUT test card), with the same CRT / wipe / scanline / glitch transitions as the PC-driven show.
+  23 s loop at 30 fps, pre-rendered and compressed (762 KB). **Generated** — edit the scenes in
+  [`tools/synthwave/offline.py`](../tools/synthwave/offline.py) (`python tools/synthwave/offline.py` writes
+  preview GIFs), then `python tools/synthwave/make_offline_firmware.py` rewrites this header.
+- `attract_fx.h` / `attract_text.h` — the earlier live-rendered attract show (plasma, fire, …), kept for
+  reference; the patch no longer includes it.
+
+![The offline show](../images/marquee_offline.gif)
 
 ```
 git clone https://github.com/PPUC/ZeDMD.git
 cd ZeDMD
 git checkout v5.1.8
 git apply ../pinball-controller/firmware/zedmd-v5.1.8-pinball.patch
-copy ..\pinball-controller\firmware\attract_*.h src\
+copy ..\pinball-controller\firmware\attract_offline.h src\
 pio run -e 128x32_rot180 -t upload
 ```
+
+On Windows, run PlatformIO from PowerShell or cmd (its toolchain installer refuses Git Bash / MSYS). The
+firmware fills ~89 % of the 2 MB app partition.
 
 Board: a classic ESP32-WROOM-32 dev board with a CP2102 USB chip (USB-C). Wire it to the panel with the
 map in [the marquee wiring picture](../images/wiring_marquee.png).

@@ -19,7 +19,8 @@ marquee** shows the game's DMD — or a neon synthwave show when nothing is runn
   and an LIS3DH accelerometer
 - **Arcade layout** too: joystick, 6 buttons, coin and start — a normal gamepad for RetroBat / MAME
 - **128 × 32 LED marquee** (two P2.5 HUB75 panels, ESP32 running [ZeDMD](https://github.com/PPUC/ZeDMD)):
-  the live DMD in pinball, the game's logo while you browse RetroBat, a neon synthwave show when idle
+  the live DMD in pinball, the game's logo while you browse RetroBat, a neon synthwave show when idle —
+  and, built into the marquee itself, a neon NO SIGNAL / WAITING FOR PC show whenever the PC isn't connected
 - **Status screen** (LilyGO T-Display-S3): nudge meter, tilt warnings, flipper-coil heat, the table name
 - **One cable in**: 12 V and USB on a single GX16-8 cable; one more to the marquee
 - **Prints without supports** on any 256 mm bed; ready-made Bambu Studio projects with every setting;
@@ -188,7 +189,7 @@ output: **5.0 V** for the hub's buck, **5.0 V** for the marquee's 10 A converter
 
 **2.3 Flash the boards** — details in [firmware/README.md](firmware/README.md):
 - Pico: **Pinscape Pico v1.0.2** + [`firmware/pinscape_config.json`](firmware/pinscape_config.json)
-- Marquee ESP32: **ZeDMD 5.1.8** with this project's patch (picture turned 180°, attract show)
+- Marquee ESP32: **ZeDMD 5.1.8** with this project's patch (picture turned 180°, the offline show)
 - T-Display-S3: `pio run -d status-display -t upload`
 
 **2.4 Solder the encoder's USB cable** to its USB-B pins (red 1 = 5 V, white 2 = D−, green 3 = D+,
@@ -267,7 +268,7 @@ With the cover populated and everything wired, before closing the case:
    to the encoder's 5 V for an instant: one crisp knock on the left. Same for SE on the right. **Never
    fire a solenoid with nothing in front of the plunger** — the striker is what holds it in.
 3. **Plug in USB:** the PC sees all five devices (list and check in [pc/README.md](pc/README.md)). The
-   marquee shows its attract show, then the neon show once the PC side runs.
+   marquee shows its own NO SIGNAL / WAITING FOR PC show, then the neon show once the PC side runs.
 4. **Buttons:** `joy.cpl` → every button lights its number (table above); each flipper also knocks.
 5. **Sound:** play something to "USB Audio DAC" — the exciter buzzes. Set the amp's left trimmer about a
    third up and raise it until loud passages just don't rattle.
@@ -342,7 +343,7 @@ marquee, RetroBat, and the three small background programs (marquee, exciter sou
 - **Nudge feel** — VPX dead zone and gain ([pc/README.md](pc/README.md)); axis signs in
   `firmware/pinscape_config.json`.
 - **Marquee show** — scenes and transitions in [`tools/synthwave/render.py`](tools/synthwave/render.py);
-  `python tools/synthwave/render.py out` writes preview GIFs. The ESP32's own attract show: `tools/attract_text.py`.
+  `python tools/synthwave/render.py out` writes preview GIFs. The marquee's built-in offline show: `tools/synthwave/offline.py` + `make_offline_firmware.py`.
 - **Wiring pictures, overview, renders** — `tools/make_wiring_diagrams.py`, `tools/make_overview.py`,
   `renders/` (Blender).
 
@@ -422,7 +423,7 @@ Take your time with the multimeter checks it asks for: they protect the hubs.
 |---|---|
 | [`print/`](print/README.md) | ready-to-print Bambu Studio projects for A1 / P1S / X1C, STLs, print settings |
 | `model/` | the parametric OpenSCAD model (`pinball_controller_v2.scad`) |
-| [`firmware/`](firmware/README.md) | Pinscape Pico config, the ZeDMD patch and attract show |
+| [`firmware/`](firmware/README.md) | Pinscape Pico config, the ZeDMD patch and the offline show |
 | [`status-display/`](status-display/README.md) | T-Display-S3 firmware, the PC helper and the exciter sound relay |
 | [`pc/`](pc/README.md) | Windows / VPX / RetroBat setup |
 | `tools/synthwave/` | the marquee service and the neon synthwave show |
