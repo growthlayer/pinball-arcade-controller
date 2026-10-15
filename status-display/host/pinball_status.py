@@ -79,6 +79,10 @@ class Display:
             return True
         except (serial.SerialException, OSError):
             print("display lost - retrying")
+            try:                                     # release the dead handle: left open, it kept COM5 busy and the
+                self.s.close()                       # host never got the display back (2026-10-15, after USB swaps)
+            except Exception:
+                pass
             self.s = None
             return False
 

@@ -22,7 +22,9 @@ marquee** shows the game's DMD — or a neon synthwave show when nothing is runn
   the live DMD in pinball, the game's logo while you browse RetroBat, a neon synthwave show when idle —
   and, built into the marquee itself, a neon NO SIGNAL / WAITING FOR PC show whenever the PC isn't connected
 - **Status screen** (LilyGO T-Display-S3): nudge meter, tilt warnings, flipper-coil heat, the table name
-- **One cable in**: 12 V and USB on a single GX16-8 cable; one more to the marquee
+- **One cable in**: 12 V and USB on a single GX16-8 cable; one more to the marquee. That cable comes from a
+  *termination box* under the desk (see [Why GX16](#why-gx16-and-what-if-you-dont-have-a-termination-box));
+  without one, plug a 12 V supply and a USB cable in separately
 - **Prints without supports** on any 256 mm bed; ready-made Bambu Studio projects with every setting;
   fully parametric OpenSCAD model
 
@@ -379,6 +381,33 @@ isolator** in the controller's USB input breaks that loop — USB ground then on
 and the coil current can only return on pins 3/4. It needs to be a **480 Mbps** type (ADuM3165): the
 cheaper 12 Mbps ADuM3160 passes the encoder, the Pico, the marquee and the screen, but Windows can't open
 the USB sound card through it.
+
+### Why GX16, and what if you don't have a termination box
+
+This controller was built for a desk where every controller (light guns, this one) plugs into one
+**termination box** mounted under the desk. The box holds the 12 V supply and a USB hub, and each controller
+gets **one locking GX16-8 cable** carrying 12 V (pins 1-4) and USB (pins 5-8). That's the only reason the
+controller has a GX16 "IN" socket.
+
+Two things learned the hard way about that one-cable route:
+- **USB must come from a hub inside the box**, a few centimetres from the GX16 socket. The controller's hub
+  links at 480 Mbps, and a plain pass-through from the PC down the 2 m tether (untwisted solder cups, an
+  8-core cable that isn't USB twisted pair) is too marginal at that speed: the marquee and sound card drop out.
+  With the box's hub re-driving the signal it runs clean (an hour with zero drop-outs, flipper hammering
+  included). Light guns get away with a pass-through because their Picos only run at 12 Mbps.
+- **A 480 Mbps USB isolator at the far end of that tether is one marginal link too many**: on a short, proper
+  USB cable it works; stacked on the tether, the marquee fails. 12 Mbps isolators avoid that but starve the
+  USB sound card. With the box's hub in the path the setup ran without an isolator.
+
+**No termination box?** Skip the GX16 IN socket and the tether, and bring the two feeds in separately:
+- **12 V:** a 6 A+ supply into a panel DC jack (5.5 × 2.1/2.5 mm, rated ≥ 7 A), wired to the same +12 V / 0 V
+  bus the GX16 pins 1-4 feed.
+- **USB:** a normal USB 2.0 cable (up to ~3 m) from the PC into a panel USB socket wired to the hub input,
+  ideally through the **480 Mbps USB isolator** (it passed the double-flipper test on a direct cable). Keep
+  USB ground off the 0 V bus (see the next note).
+
+The marquee link is unchanged either way. *(The OpenSCAD model has the GX16 IN socket only; a "separate DC +
+USB" back-wall option is planned.)*
 
 **Power budget.** Two solenoids ≈ 4.8 A for 0.1 s, the marquee up to ≈ 3 A at 12 V on full white
 (far less on DMD content), the amp ≈ 1 A on loud passages, the logic < 0.5 A. A 6 A or bigger 12 V supply

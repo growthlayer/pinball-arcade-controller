@@ -45,6 +45,10 @@
 
     // What the PC sees: a gamepad with the nudge acceleration on X/Y and the nudge velocity on RX/RY
     // (Visual Pinball 10.8+ can use either; velocity gives the most realistic nudging).
+    // Nudge-window settings (stored on the Pico by the Config Tool, NOT in this file) - calibrated 2026-10-15:
+    //   noise calibration -> quiet threshold X 627 / Y 867 / Z 1471; jitter window X 1000 / Y 1300 / Z 0;
+    //   DC blocker 200; velocity decay 1000 ms; velocity scaling 650 (hard shove ~2/3..full scale, rest = 0).
+    //   Redo them in Config Tool -> Nudge after a factory reset or a new accelerometer mount.
     gamepad: {
         enable: true,
         x: "nudge.x",
@@ -53,9 +57,10 @@
         ry: "nudge.vy",
         // Visual Pinball 10.8.0 reads nudge from DirectInput axes and sums EVERY game controller, so the arcade
         // stick's X/Y nudged the table too. The stick encoder has no sliders: VPX reads nudge from these instead
-        // (acceleration input; velocity mode needs a far larger scale in VPX 10.8.0 - retry after the USB isolator).
-        slider1: "nudge.x",
-        slider2: "nudge.y",
+        // 2026-10-15: VELOCITY on the sliders (VPX AccelVelocityInput = 1). With acceleration the ball got pushed
+        // and then pulled straight back (a shove reads + then - as the box stops). Acceleration is still on X/Y.
+        slider1: "nudge.vx",
+        slider2: "nudge.vy",
     },
 
     // Open Pinball Device: the newer pinball-specific interface (VP 10.8+ picks it up automatically).

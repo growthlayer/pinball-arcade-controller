@@ -39,3 +39,5 @@ tools/audio/play_to
 tools/audio/*.wav
 tools/audio/sounds/
 renders/build/
+!print/v2/*.3mf
+!print/v2/*.stl

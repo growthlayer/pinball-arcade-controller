@@ -104,9 +104,10 @@ class Marquee:
                 msg = (fmt or b"").decode("utf-8", "replace")
             low = msg.lower()
             # only errors from the frame stream count (the handshake logs a harmless "response error" on connect)
-            if "streambytes failed" in low or "full frame forced" in low or "libserialport error" in low:
+            stream_err = "streambytes failed" in low or "full frame forced" in low or "libserialport error" in low
+            if stream_err:
                 self.link_error_at = time.time()
-            if self.log_n < 200:                            # keep the log readable
+            if stream_err or self.log_n < 200:              # keep the log readable, but never drop a stream error
                 self.log_n += 1
                 log("libzedmd:", msg.strip())
         self._cb = cbtype(on_log)                          # keep a reference: ctypes callbacks must not be freed
@@ -137,9 +138,9 @@ class Marquee:
         if not self.d.ZeDMD_Open(z):
             wait = self.BACKOFF[min(self.fails, len(self.BACKOFF) - 1)]
             self.fails += 1
-            if self.fails >= 2:                            # ZeDMD alive (attract show) but deaf: a clean chip reset
-                hard_reset(port)                           # clears it, like re-plugging the marquee did
-                wait = self.BOOT_GRACE
+            if self.fails == 2:                            # ZeDMD alive (attract show) but deaf: ONE clean chip reset
+                hard_reset(port)                           # clears it, like re-plugging the marquee did; resetting
+                wait = self.BOOT_GRACE                     # on every retry kept it in a boot loop (2026-10-15)
             log("could not open", port, f"- next try in {int(wait)} s (lets the ESP32 finish booting)")
             self.retry_at = now + wait
             return False
