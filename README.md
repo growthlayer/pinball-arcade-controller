@@ -1,4 +1,4 @@
-# Pinball Controller — a desktop virtual-pinball and arcade controller you can feel
+# Visual Pinball Controller — a desktop virtual-pinball and arcade controller you can feel
 
 A 3D-printed controller for **Visual Pinball X** and **arcade games** that sits on a desk or table. Real
 **solenoids knock** the box on every flip, an **exciter** under your palms plays the table's sounds as

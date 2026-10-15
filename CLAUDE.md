@@ -1,6 +1,6 @@
-# Pinball Controller — build assistant notes for Claude Code
+# Visual Pinball Controller — build assistant notes for Claude Code
 
-You are helping someone build (or modify) the Pinball Controller: a 3D-printed desktop controller for
+You are helping someone build (or modify) the Visual Pinball Controller: a 3D-printed desktop controller for
 Visual Pinball X and arcade games with solenoid flipper knocks, an exciter, accelerometer nudge, a
 status screen and a slide-on LED marquee. The builder may not be an electronics person. Work step by
 step with them, confirm what they see before moving on, and ask for a photo whenever the hardware state

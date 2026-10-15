@@ -293,6 +293,43 @@ def focus_is_strandable(pids):
         return False
 
 
+HUNG_EXIT_S = 6                                # 15 s felt like a freeze (each hang is ~5 s + this)
+
+
+def reap_hung_exit(pids, now, fs):
+    """VPX 10.8.0 sometimes hangs for good while closing a table ("Not Responding", seen 3x on 2026-10-15): it keeps
+    COM7 (the marquee stays dark) and RetroBat waits on it forever. Kill it - but only a process that already showed
+    its player window (never a table that's still loading), whose player window is gone (the user exited) and whose
+    remaining window has been hung for HUNG_EXIT_S."""
+    st = fs.setdefault("reap", {})
+    for pid in list(st):
+        if pid not in pids:
+            del st[pid]
+    for pid in pids:
+        s = st.setdefault(pid, {"played": False, "hung_since": 0.0})
+        wins = vpx_windows({pid})
+        classes = []
+        for h in wins:
+            c = ctypes.create_unicode_buffer(64)
+            _u.GetClassNameW(h, c, 64)
+            classes.append(c.value)
+        if "VPPlayer" in classes:
+            s["played"], s["hung_since"] = True, 0.0
+            continue
+        hung = bool(wins) and all(_u.IsHungAppWindow(h) for h in wins)
+        if not (s["played"] and hung):
+            s["hung_since"] = 0.0
+            continue
+        s["hung_since"] = s["hung_since"] or now
+        if now - s["hung_since"] >= HUNG_EXIT_S:
+            try:
+                psutil.Process(pid).kill()
+                log(f"VPX pid {pid} hung on table exit for {HUNG_EXIT_S} s - killed it (frees the marquee + RetroBat)")
+            except psutil.Error as e:
+                log("could not kill hung VPX:", e)
+            s["hung_since"] = 0.0
+
+
 def keep_vpx_in_front(vpx, fs):
     """called every 0.5 s with {pid: start time} of running pinball players"""
     if not vpx:
@@ -314,6 +351,7 @@ def keep_vpx_in_front(vpx, fs):
         fs["bounce_at"] = now + 2.0
         log("controller hub came back during a table - refocusing VPX in 2 s")
     fs["esp"] = esp
+    reap_hung_exit(pids, now, fs)
     if fs["bounce_at"] and now >= fs["bounce_at"]:
         fs["bounce_at"] = 0.0
         h = vpx_window(pids)

@@ -1,4 +1,4 @@
-// Pinscape Pico configuration - pinball arcade controller (github.com/growthlayer/pinball-arcade-controller)
+// Pinscape Pico configuration - Visual Pinball Controller (github.com/growthlayer/visual-pinball-controller)
 // Firmware: PinscapePico v1.0.2 (firmware/PinscapePico-pico-v1.0.2.uf2), flashed 2026-10-02.
 // Load with the Pinscape Pico Config Tool (Windows): open the device -> Main Config -> paste this file -> Save to Pico,
 // or from the Mac: tools/pinscape/pinscape_cli putconfig firmware/pinscape_config.json
@@ -29,7 +29,8 @@
     lis3dh: {
         i2c: 0,
         addr: 0x18,
-        gRange: 2,                   // best resolution for nudging
+        gRange: 2,                   // best resolution for nudging. 2026-10-15: tried 8 g - a coil knock reads ~2.8 g
+                                     // vs ~0.6 g for a hard shove, so the range isn't the fix (foam-mount the board)
     },
 
     // Axis mapping. Standard orientation: +X = right, +Y = toward the back, +Z = up.
@@ -57,10 +58,10 @@
         ry: "nudge.vy",
         // Visual Pinball 10.8.0 reads nudge from DirectInput axes and sums EVERY game controller, so the arcade
         // stick's X/Y nudged the table too. The stick encoder has no sliders: VPX reads nudge from these instead
-        // 2026-10-15: VELOCITY on the sliders (VPX AccelVelocityInput = 1). With acceleration the ball got pushed
-        // and then pulled straight back (a shove reads + then - as the box stops). Acceleration is still on X/Y.
-        slider1: "nudge.vx",
-        slider2: "nudge.vy",
+        // 2026-10-15: velocity on the sliders was tried and reverted - the coil knock (~2.8 g, 5x a shove) integrates
+        // into full-scale velocity, so flippers moved the ball. Back to acceleration until the LIS3DH is foam-mounted.
+        slider1: "nudge.x",
+        slider2: "nudge.y",
     },
 
     // Open Pinball Device: the newer pinball-specific interface (VP 10.8+ picks it up automatically).

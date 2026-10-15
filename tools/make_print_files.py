@@ -50,7 +50,7 @@ SETS = {              # 3MF name -> (process, STLs)
 }
 META = {"Title": "Pinball controller - 3D-printed arcade + virtual pinball controller",
         "License": "CC BY-SA 4.0",
-        "Description": "Build guide, wiring and parts list: github.com/growthlayer/pinball-arcade-controller",
+        "Description": "Build guide, wiring and parts list: github.com/growthlayer/visual-pinball-controller",
         "ProfileTitle": "0.20mm PLA Matte, 4 walls, gyroid, no supports"}
 
 def export_stls():

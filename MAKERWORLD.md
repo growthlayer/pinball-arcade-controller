@@ -6,7 +6,7 @@ Everything needed to publish this on MakerWorld. Files to upload are listed at t
 
 ## Title
 
-Pinball Controller — Desktop Virtual Pinball + Arcade Controller with Solenoid Knock, Haptics, Nudge and LED Marquee
+Visual Pinball Controller — Desktop Virtual Pinball + Arcade Controller with Solenoid Knock, Haptics, Nudge and LED Marquee
 
 ## Category / tags
 
@@ -53,7 +53,7 @@ H, an LIS3DH, a LilyGO T-Display-S3, a zero-delay encoder kit (joystick + 10 but
 connectors, a 12 V 6 A+ supply, and for the marquee two P2.5 64 × 32 panels, an ESP32 and a 10 A 5 V
 converter. **Full parts list with links, step-by-step wiring pictures, firmware and PC setup:**
 
-👉 **https://github.com/growthlayer/pinball-arcade-controller**
+👉 **https://github.com/growthlayer/visual-pinball-controller**
 
 **Assembly in short**
 1. Print the test coupon, then the cover, case, marquee trays, plate and small parts; melt in the M3 inserts.
